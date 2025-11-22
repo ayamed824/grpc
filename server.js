@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import nodemailer from 'nodemailer';
+import SibApiV3Sdk from 'sib-api-v3-sdk';
 
 const app = express();
 app.use(cors());
@@ -8,41 +8,32 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-// === Configuration Gmail avec App Password ===
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: 'ayamed200355@gmail.com',         // ton Gmail
-    pass: 'cqseyqgclpqedyxb',     // mot de passe d’application Gmail
-  },
-});
+// Config Sendinblue
+const client = SibApiV3Sdk.ApiClient.instance;
+const apiKey = client.authentications['api-key'];
+apiKey.apiKey = process.env.SENDINBLUE_API_KEY;
 
-// === Endpoint pour envoyer le code promo ===
+const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+
 app.post('/send-promo', async (req, res) => {
   const { email, promoCode, percent } = req.body;
-
-  if (!email || !promoCode || !percent) {
+  if (!email || !promoCode || !percent)
     return res.status(400).json({ success: false, message: "Données manquantes" });
-  }
+
+  const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail({
+    to: [{ email }],
+    sender: { email: "ayamed200355@tondomaine.com", name: "Elles" },
+    subject: `Félicitations ! Votre code promo ${promoCode}`,
+    htmlContent: `
+      <h2>🎉 Bravo !</h2>
+      <p>Vous avez gagné un code promo de <strong>${percent}</strong> !</p>
+      <p>Code promo : <strong>${promoCode}</strong></p>
+      <p>À utiliser une seule fois lors de votre prochaine commande.</p>
+    `
+  });
 
   try {
-    const mailOptions = {
-      from: 'tonemail@gmail.com',
-      to: email,
-      subject: `Félicitations ! Votre code promo ${promoCode}`,
-      html: `
-        <h2>🎉 Bravo !</h2>
-        <p>Vous avez atteint un nouveau palier de commandes et gagnez un code promo de <strong>${percent}</strong> !</p>
-        <p>Code promo : <strong>${promoCode}</strong></p>
-        <p>Vous pouvez l'utiliser une seule fois lors de votre prochaine commande.</p>
-        <br>
-        <p>Merci pour votre fidélité !</p>
-      `,
-    };
-
-    await transporter.sendMail(mailOptions);
-    console.log(`Email promo envoyé à ${email} avec ${promoCode}`);
-
+    await apiInstance.sendTransacEmail(sendSmtpEmail);
     res.json({ success: true });
   } catch (err) {
     console.error("Erreur envoi email:", err);
@@ -50,6 +41,4 @@ app.post('/send-promo', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Serveur REST promo en écoute sur http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`Serveur en écoute sur http://localhost:${PORT}`));
