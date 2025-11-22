@@ -1,4 +1,3 @@
-// server.js
 import express from 'express';
 import cors from 'cors';
 import nodemailer from 'nodemailer';
@@ -9,12 +8,12 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-// === Configuration du transporteur email (exemple Gmail) ===
+// === Configuration Gmail avec App Password ===
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.EMAIL_USER, // ton email
-    pass: process.env.EMAIL_PASS, // mot de passe ou app password
+    user: 'ayamed200355@gmail.com',         // ton Gmail
+    pass: 'cqseyqgclpqedyxb',     // mot de passe d’application Gmail
   },
 });
 
@@ -28,7 +27,7 @@ app.post('/send-promo', async (req, res) => {
 
   try {
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: 'tonemail@gmail.com',
       to: email,
       subject: `Félicitations ! Votre code promo ${promoCode}`,
       html: `
@@ -51,7 +50,6 @@ app.post('/send-promo', async (req, res) => {
   }
 });
 
-// === Démarrage du serveur ===
 app.listen(PORT, () => {
   console.log(`Serveur REST promo en écoute sur http://localhost:${PORT}`);
 });
