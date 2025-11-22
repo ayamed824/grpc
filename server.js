@@ -1,60 +1,39 @@
-import grpc from '@grpc/grpc-js';
-import protoLoader from '@grpc/proto-loader';
-import nodemailer from 'nodemailer';
-import path from 'path';
-import { fileURLToPath } from "url";
+import express from "express";
+import cors from "cors";
+import nodemailer from "nodemailer";
 
-// Required for __dirname with ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const app = express();
+app.use(express.json());
+app.use(cors());
 
-// Load proto file
-const PROTO_PATH = path.join(__dirname, "proto/email.proto");
-
-const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
-  keepCase: true,
-  longs: String,
-  enums: String,
-  defaults: true,
-  oneofs: true
-});
-
-const emailProto = grpc.loadPackageDefinition(packageDefinition).email;
-
-// Email transporter
+// ---- EMAIL TRANSPORT ----
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: "ayamed200355@gmail.com",       // ← ton Gmail
-    pass: "jyfdephqecvkgbji"              // ← mot de passe d’application (sans espaces)
+    user: "ayamed200355@gmail.com",
+    pass: "jyfdephqecvkgbji",
+  },
+});
+
+// ---- SEND EMAIL ----
+app.post("/send-email", async (req, res) => {
+  const { to, subject, message } = req.body;
+
+  try {
+    await transporter.sendMail({
+      from: "ayamed200355@gmail.com",
+      to,
+      subject,
+      text: message,
+    });
+
+    res.json({ success: true });
+  } catch (e) {
+    console.log("EMAIL ERROR:", e);
+    res.json({ success: false });
   }
 });
 
-// Function to send email
-function sendPromoEmail(call, callback) {
-  const { to, subject, message } = call.request;
-
-  transporter.sendMail(
-    { from: "ayamed200355@gmail.com", to, subject, text: message },
-    (error, info) => {
-      if (error) return callback(null, { success: false, info: error.toString() });
-      callback(null, { success: true, info: "Email envoyé !" });
-    }
-  );
-}
-
-
-// Start gRPC Server
-function main() {
-  const server = new grpc.Server();
-  server.addService(emailProto.EmailService.service, {
-    SendPromoEmail: sendPromoEmail
-  });
-
-  const address = "0.0.0.0:50051";
-  server.bindAsync(address, grpc.ServerCredentials.createInsecure(), () => {
-    console.log("🚀 gRPC Server running on " + address);
-  });
-}
-
-main();
+// ---- START SERVER ----
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => console.log(`🚀 REST API running on ${PORT}`));
