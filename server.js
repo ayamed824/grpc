@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 3000;
 // Config Sendinblue/Brevo
 const client = SibApiV3Sdk.ApiClient.instance;
 const apiKey = client.authentications['api-key'];
-apiKey.apiKey = "GzV5vrUKSy30fFTW";  // <-- clé API mteek
+apiKey.apiKey = process.env.SENDINBLUE_API_KEY;  // <-- clé API mteek
 
 const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 
