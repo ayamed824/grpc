@@ -23,7 +23,7 @@ app.post('/send-promo', async (req, res) => {
 
   const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail({
     to: [{ email }],
-    sender: { email: "9c491f001@smtp-brevo.com", name: "Elles" }, // <-- sender vérifié Brevo
+    sender: { email: "ayamed200355@gmail.com", name: "Elles" }, // <-- sender vérifié Brevo
     subject: `Félicitations ! Votre code promo ${promoCode}`,
     htmlContent: `
       <h2>🎉 Bravo !</h2>
